@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import cgi
+import datetime
 import os
 import sys
 import subprocess
@@ -7,6 +8,10 @@ import xml.etree.ElementTree as ET
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+
+
+def datetimeFromSvnDateString(txt):
+    return datetime.datetime.strptime(txt[:19], "%Y-%m-%dT%H:%M:%S")
 
 
 def getUrlRevisions(url):
@@ -58,10 +63,12 @@ def formatSource(url, revision):
 
         rev = commit.attrib["revision"]
         author = commit.findtext("author")
-        date = commit.findtext("date")
+        date = datetimeFromSvnDateString(commit.findtext("date"))
 
         lineNumberHtml = str(lineNumber + 1).rjust(5)
         lineNumberHtml = fixSpaces(lineNumberHtml)
+
+        dateHtml = date.strftime("%c")
 
         revHtml = fixSpaces(rev.rjust(8))
         if int(rev) == revision:
