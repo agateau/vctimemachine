@@ -53,12 +53,12 @@ def formatSource(url, revision):
     tree = ET.parse(pipe)
     sourceLines = []
 
-    entries = tree.getroot().findall("target/entry")
-    for lineNumber, (code, entry) in enumerate(zip(lines, entries)):
+    commits = tree.getroot().findall("target/entry/commit")
+    for lineNumber, (code, commit) in enumerate(zip(lines, commits)):
 
-        rev = entry.find("commit").attrib["revision"]
-        author = entry.findtext("commit/author")
-        date = entry.findtext("commit/date")
+        rev = commit.attrib["revision"]
+        author = commit.findtext("author")
+        date = commit.findtext("date")
 
         lineNumberHtml = str(lineNumber + 1).rjust(5)
         lineNumberHtml = fixSpaces(lineNumberHtml)
