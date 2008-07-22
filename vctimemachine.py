@@ -45,14 +45,20 @@ def getRevisionLog(url, revision):
 def formatSource(url, revision):
     def fixSpaces(txt):
         return txt.replace(" ", "&nbsp;")
-    cmd = ["svn", "annotate", "-r", str(revision), url]
+
+    lines = getUrlAtRevision(url, revision).split("\n")
+
+    cmd = ["svn", "annotate", "--xml", "-r", str(revision), url]
     pipe = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout
+    tree = ET.parse(pipe)
     sourceLines = []
-    for lineNumber, line in enumerate(pipe.readlines()):
-        line = unicode(line, "utf-8")
-        rev = line[:6].strip()
-        author = line[6:18].strip()
-        code = line[18:]
+
+    entries = tree.getroot().findall("target/entry")
+    for lineNumber, (code, entry) in enumerate(zip(lines, entries)):
+
+        rev = entry.find("commit").attrib["revision"]
+        author = entry.findtext("commit/author")
+        date = entry.findtext("commit/date")
 
         lineNumberHtml = str(lineNumber + 1).rjust(5)
         lineNumberHtml = fixSpaces(lineNumberHtml)
@@ -62,7 +68,7 @@ def formatSource(url, revision):
             revClass = "current"
         else:
             revClass = ""
-        revHtml = "<a class='%s' href='r%s'>%s</a>" % (revClass, rev, revHtml)
+        revHtml = "<a class='%s' href='r%s' title='%s'>%s</a>" % (revClass, rev, date, revHtml)
 
         authorHtml = cgi.escape(author.rjust(10))
         authorHtml = fixSpaces(authorHtml)
