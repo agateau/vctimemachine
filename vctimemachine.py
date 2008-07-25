@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+from RevisionDetailsWidget import *
 
 def datetimeFromSvnDateString(txt):
     return datetime.datetime.strptime(txt[:19], "%Y-%m-%dT%H:%M:%S")
@@ -114,35 +115,23 @@ class Window(QMainWindow):
         self.sourceBrowser.setFont(fixedFont)
         self.sourceBrowser.setOpenLinks(False)
 
-        self.setCentralWidget(self.sourceBrowser)
-
         # Revision details
-        self.detailsLabel = QLabel()
-        self.goToPreviousButton = QPushButton()
-        self.goToCurrentButton = QPushButton()
-        self.goToNextButton = QPushButton()
-        self.revisionDetailsBrowser = QTextBrowser()
-        self.revisionDetailsBrowser.setFont(fixedFont)
+        self.revisionDetailsWidget = RevisionDetailsWidget()
+        self.revisionDetailsWidget.layout().setMargin(0)
 
-        self.revisionDetailsWidget = QWidget()
-        layout = QGridLayout(self.revisionDetailsWidget)
-        layout.setMargin(0)
-        layout.addWidget(self.detailsLabel, 0, 0)
-        layout.addWidget(self.goToPreviousButton, 0, 1)
-        layout.addWidget(self.goToCurrentButton, 0, 2)
-        layout.addWidget(self.goToNextButton, 0, 3)
-        layout.addWidget(self.revisionDetailsBrowser, 1, 0, 1, 4)
-
-        dockWidget = QDockWidget("Details")
-        dockWidget.setWidget(self.revisionDetailsWidget)
+        # Layout
+        splitter = QSplitter()
+        splitter.setOrientation(Qt.Vertical)
+        splitter.addWidget(self.sourceBrowser)
+        splitter.addWidget(self.revisionDetailsWidget)
         self.revisionDetailsWidget.hide()
-        self.addDockWidget(Qt.BottomDockWidgetArea, dockWidget)
+        self.setCentralWidget(splitter)
 
         # Connections
         QObject.connect(self.sourceBrowser, SIGNAL("anchorClicked(const QUrl&)"), self.slotSourceAnchorClicked)
-        QObject.connect(self.goToPreviousButton, SIGNAL("clicked()"), self.goToPrevious)
-        QObject.connect(self.goToCurrentButton, SIGNAL("clicked()"), self.goToCurrent)
-        QObject.connect(self.goToNextButton, SIGNAL("clicked()"), self.goToNext)
+        QObject.connect(self.revisionDetailsWidget.goToPreviousButton, SIGNAL("clicked()"), self.goToPrevious)
+        QObject.connect(self.revisionDetailsWidget.goToCurrentButton, SIGNAL("clicked()"), self.goToCurrent)
+        QObject.connect(self.revisionDetailsWidget.goToNextButton, SIGNAL("clicked()"), self.goToNext)
 
         revision = getLatestRevisionForUrl(url)
         self.goToRevision(revision)
@@ -178,15 +167,15 @@ class Window(QMainWindow):
 
         self.currentRevision = revision
         details = getRevisionLog(self.url, self.currentRevision)
-        self.revisionDetailsBrowser.setText(details)
+        self.revisionDetailsWidget.revisionDetailsBrowser.setText(details)
 
-        self.detailsLabel.setText("Showing details for r%d" % self.currentRevision)
+        self.revisionDetailsWidget.detailsLabel.setText("Showing details for r%d" % self.currentRevision)
 
-        self.goToPreviousButton.setText("Go to r%d" % (self.currentRevision - 1))
+        self.revisionDetailsWidget.goToPreviousButton.setText("Go to r%d" % (self.currentRevision - 1))
 
-        self.goToCurrentButton.setText("Go to r%d" % self.currentRevision)
+        self.revisionDetailsWidget.goToCurrentButton.setText("Go to r%d" % self.currentRevision)
 
-        self.goToNextButton.setText("Go to r%d" % (self.currentRevision + 1))
+        self.revisionDetailsWidget.goToNextButton.setText("Go to r%d" % (self.currentRevision + 1))
 
 
 def main():
