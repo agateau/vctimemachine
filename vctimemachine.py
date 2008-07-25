@@ -132,6 +132,7 @@ class Window(QMainWindow):
         QObject.connect(self.revisionDetailsWidget.goToPreviousButton, SIGNAL("clicked()"), self.goToPrevious)
         QObject.connect(self.revisionDetailsWidget.goToCurrentButton, SIGNAL("clicked()"), self.goToCurrent)
         QObject.connect(self.revisionDetailsWidget.goToNextButton, SIGNAL("clicked()"), self.goToNext)
+        QObject.connect(self.revisionDetailsWidget.showDiffButton, SIGNAL("clicked()"), self.showDiff)
 
         revision = getLatestRevisionForUrl(url)
         self.goToRevision(revision)
@@ -176,6 +177,18 @@ class Window(QMainWindow):
         self.revisionDetailsWidget.goToCurrentButton.setText("Go to r%d" % self.currentRevision)
 
         self.revisionDetailsWidget.goToNextButton.setText("Go to r%d" % (self.currentRevision + 1))
+
+
+    def showDiff(self):
+        old = self.currentRevision - 1
+        new = self.currentRevision
+        cmd = ["svn", "diff", "-r%d:%d" % (old, new), self.url]
+
+        viewerCmd = ["gvim", "-R", "-"]
+
+        p1 = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        p2 = subprocess.Popen(viewerCmd, stdin=p1.stdout)
+        p2.communicate()
 
 
 def main():
